@@ -1,23 +1,21 @@
 $ErrorActionPreference = "Stop"
 
 $BaseUrl = "http://cli.sedstart.com/latest"
-$InstallDir = "$env:LOCALAPPDATA\Programs\sedstart"
 $BinaryName = "sedstart.exe"
+$InstallDir = "$env:LOCALAPPDATA\Programs\sedstart"
+
+Write-Host "🔎 Detecting platform..."
 
 $Arch = $env:PROCESSOR_ARCHITECTURE
 
-if ($Arch -eq "AMD64") {
-    $File = "cli_windows_amd64_v1/sedstart.exe"
-}
-elseif ($Arch -eq "ARM64") {
-    $File = "cli_windows_arm64_v8.0/sedstart.exe"
-}
-elseif ($Arch -eq "x86") {
-    $File = "cli_windows_386_sse2/sedstart.exe"
-}
-else {
-    Write-Host "Unsupported architecture: $Arch"
-    exit 1
+switch ($Arch) {
+    "AMD64" { $File = "cli_windows_amd64_v1/sedstart.exe" }
+    "ARM64" { $File = "cli_windows_arm64_v8.0/sedstart.exe" }
+    "x86"   { $File = "cli_windows_386_sse2/sedstart.exe" }
+    default {
+        Write-Host "❌ Unsupported architecture: $Arch"
+        exit 1
+    }
 }
 
 $Url = "$BaseUrl/$File"
@@ -30,7 +28,8 @@ Invoke-WebRequest -Uri $Url -OutFile "$InstallDir\$BinaryName"
 Write-Host "🔐 Unblocking file..."
 Unblock-File "$InstallDir\$BinaryName"
 
-Write-Host "🔧 Adding to PATH (user scope)..."
+Write-Host "🔧 Adding to PATH..."
+
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 
 if ($currentPath -notlike "*$InstallDir*") {
@@ -41,5 +40,6 @@ if ($currentPath -notlike "*$InstallDir*") {
     )
 }
 
-Write-Host "✅ Installed successfully!"
-Write-Host "Restart your terminal and run: sedstart"
+Write-Host ""
+Write-Host "✅ sedstart installed successfully!"
+Write-Host "Restart your terminal and run: sedstart --help"
