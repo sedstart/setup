@@ -2,16 +2,31 @@
 
 set -e
 
-BASE_URL="http://cli.sedstart.com/latest"
+DEFAULT_BASE_URL="http://cli.sedstart.com/latest"
+BASE_URL="${BASE_URL:-$DEFAULT_BASE_URL}"
 BINARY_NAME="sedstart"
 INSTALL_DIR="/usr/local/bin"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --base-url)
+            BASE_URL="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+echo "🌍 Using base URL: $BASE_URL"
+echo "🔎 Detecting platform..."
 
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
-echo "🔎 Detecting platform..."
-
-# Detect OS
 if [[ "$OS" == "Darwin" ]]; then
     PLATFORM="darwin"
 elif [[ "$OS" == "Linux" ]]; then
@@ -21,7 +36,6 @@ else
     exit 1
 fi
 
-# Detect ARCH
 case "$ARCH" in
     x86_64)
         if [[ "$PLATFORM" == "darwin" ]]; then
@@ -51,15 +65,10 @@ URL="$BASE_URL/$FILE"
 echo "⬇️ Downloading $URL..."
 curl -fsSL "$URL" -o "$BINARY_NAME"
 
-echo "🔐 Making executable..."
 chmod +x "$BINARY_NAME"
-
-echo "📦 Installing to $INSTALL_DIR (may require sudo)..."
 sudo mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 
-# macOS quarantine fix
 if [[ "$PLATFORM" == "darwin" ]]; then
-    echo "🛡 Removing macOS quarantine flag..."
     sudo xattr -d com.apple.quarantine "$INSTALL_DIR/$BINARY_NAME" 2>/dev/null || true
 fi
 

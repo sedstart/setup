@@ -1,9 +1,13 @@
+param(
+    [string]$BaseUrl = "http://cli.sedstart.com/latest"
+)
+
 $ErrorActionPreference = "Stop"
 
-$BaseUrl = "http://cli.sedstart.com/latest"
 $BinaryName = "sedstart.exe"
 $InstallDir = "$env:LOCALAPPDATA\Programs\sedstart"
 
+Write-Host "🌍 Using base URL: $BaseUrl"
 Write-Host "🔎 Detecting platform..."
 
 $Arch = $env:PROCESSOR_ARCHITECTURE
@@ -25,10 +29,7 @@ Write-Host "⬇️ Downloading $Url..."
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Invoke-WebRequest -Uri $Url -OutFile "$InstallDir\$BinaryName"
 
-Write-Host "🔐 Unblocking file..."
 Unblock-File "$InstallDir\$BinaryName"
-
-Write-Host "🔧 Adding to PATH..."
 
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 
@@ -42,4 +43,4 @@ if ($currentPath -notlike "*$InstallDir*") {
 
 Write-Host ""
 Write-Host "✅ sedstart installed successfully!"
-Write-Host "Restart your terminal and run: sedstart --help"
+Write-Host "Restart terminal and run: sedstart --help"
