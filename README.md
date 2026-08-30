@@ -62,13 +62,13 @@ You can override the base URL.
 ## 🍎 macOS / 🐧 Linux (QA Example)
 
 ``` bash
-curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash -s -- --base-url http://qa-cli.sedstart.com/latest
+curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash -s -- --base-url http://cli.sedinqa.com/latest
 ```
 
 or using environment variable:
 
 ``` bash
-BASE_URL=http://qa-cli.sedstart.com/latest curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash
+BASE_URL=http://cli.sedinqa.com/latest curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash
 ```
 
 ------------------------------------------------------------------------
