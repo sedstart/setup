@@ -106,6 +106,45 @@ The installer automatically:
 -   Removes macOS quarantine flag
 -   Unblocks Windows executable
 -   Adds to PATH if required
+-   Registers the Chrome Native Messaging host (see below) for every
+    supported Chromium-based browser it finds installed
+
+------------------------------------------------------------------------
+
+# 🔌 Chrome Native Messaging Host
+
+The **sedstart-recorder** browser extension drives local runs of this CLI
+via [Chrome Native
+Messaging](https://developer.chrome.com/docs/apps/nativeMessaging), which
+requires a small per-user, per-machine, per-browser manifest (there's no
+Web Store equivalent for this piece). The installer registers it
+automatically for every Chrome, Chromium, Microsoft Edge, or Brave install
+it finds on your machine, pointed at the published extension.
+
+If you don't use the extension, or don't want browser integration
+touched at all, skip it:
+
+``` bash
+curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash -s -- --skip-native-host
+```
+
+``` powershell
+iex "& { $(iwr https://raw.githubusercontent.com/sedstart/setup/main/install.ps1 -UseBasicParsing) } -SkipNativeHost"
+```
+
+Testing against an unpacked/dev build of the extension (its own id, not
+the Web Store one)? Override it the same way as `--base-url`:
+
+``` bash
+curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash -s -- --extension-id <your-dev-extension-id>
+```
+
+``` powershell
+iex "& { $(iwr https://raw.githubusercontent.com/sedstart/setup/main/install.ps1 -UseBasicParsing) } -ExtensionId '<your-dev-extension-id>'"
+```
+
+Re-running the installer re-registers the host too, so updating
+sedstart (`sedstart --help` above) keeps it in sync automatically.
 
 ------------------------------------------------------------------------
 
