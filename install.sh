@@ -2,10 +2,12 @@
 
 set -e
 
-DEFAULT_BASE_URL="http://cli.sedstart.com/latest"
+DEFAULT_BASE_URL="https://cli.sedstart.com/latest"
 BASE_URL="${BASE_URL:-$DEFAULT_BASE_URL}"
 BINARY_NAME="sedstart"
-INSTALL_DIR="/usr/local/bin"
+# Per-user directory: needs no sudo. Legacy installs used /usr/local/bin.
+INSTALL_DIR="$HOME/.local/bin"
+LEGACY_INSTALL_PATH="/usr/local/bin/sedstart"
 
 # Chrome Web Store ID of the published sedstart-recorder extension (used for
 # both QA and prod - see sedstart-fe's env.qa/env.prod NEXT_PUBLIC_EXTENSION_ID).
@@ -82,11 +84,47 @@ echo "⬇️ Downloading $URL..."
 curl -fsSL "$URL" -o "$BINARY_NAME"
 
 chmod +x "$BINARY_NAME"
-sudo mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+mkdir -p "$INSTALL_DIR"
+mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 
 if [[ "$PLATFORM" == "darwin" ]]; then
-    sudo xattr -d com.apple.quarantine "$INSTALL_DIR/$BINARY_NAME" 2>/dev/null || true
+    xattr -d com.apple.quarantine "$INSTALL_DIR/$BINARY_NAME" 2>/dev/null || true
 fi
+
+# Remove an old /usr/local/bin install, but only if one exists - checking
+# first means a fresh machine is never asked for sudo. If it exists but we
+# can't delete it, tell the user instead of prompting: the old copy would
+# shadow the new one on PATH.
+if [[ -e "$LEGACY_INSTALL_PATH" || -L "$LEGACY_INSTALL_PATH" ]]; then
+    if rm -f "$LEGACY_INSTALL_PATH" 2>/dev/null; then
+        echo "🧹 Removed old install at $LEGACY_INSTALL_PATH"
+    else
+        echo "⚠️  Old install found at $LEGACY_INSTALL_PATH and could not be removed without sudo."
+        echo "   It may shadow the new version. Remove it with:"
+        echo "     sudo rm $LEGACY_INSTALL_PATH"
+    fi
+fi
+
+# GitHub Actions: make the binary available to later steps in the job.
+if [[ -n "${GITHUB_PATH:-}" ]]; then
+    echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+fi
+
+# Make sure $INSTALL_DIR is on PATH for future shells.
+case ":$PATH:" in
+    *":$INSTALL_DIR:"*) ;;
+    *)
+        case "$(basename "${SHELL:-}")" in
+            zsh)  PROFILE="$HOME/.zshrc" ;;
+            bash) if [[ "$PLATFORM" == "darwin" ]]; then PROFILE="$HOME/.bash_profile"; else PROFILE="$HOME/.bashrc"; fi ;;
+            *)    PROFILE="$HOME/.profile" ;;
+        esac
+        if ! grep -qs "$INSTALL_DIR" "$PROFILE" 2>/dev/null; then
+            printf '\n# Added by sedstart installer\nexport PATH="%s:$PATH"\n' "$INSTALL_DIR" >> "$PROFILE"
+        fi
+        echo "ℹ️  Added $INSTALL_DIR to PATH in $PROFILE - restart your terminal."
+        ;;
+esac
 
 echo ""
 echo "✅ sedstart installed successfully!"

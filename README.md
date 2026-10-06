@@ -53,7 +53,7 @@ iwr https://raw.githubusercontent.com/sedstart/setup/main/install.ps1 -UseBasicP
 
 By default, the installer downloads binaries from:
 
-    http://cli.sedstart.com/latest
+    https://cli.sedstart.com/latest
 
 You can override the base URL.
 
@@ -62,13 +62,13 @@ You can override the base URL.
 ## 🍎 macOS / 🐧 Linux (QA Example)
 
 ``` bash
-curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash -s -- --base-url http://cli.sedinqa.com/latest
+curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash -s -- --base-url https://cli.sedinqa.com/latest
 ```
 
 or using environment variable:
 
 ``` bash
-BASE_URL=http://cli.sedinqa.com/latest curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash
+BASE_URL=https://cli.sedinqa.com/latest curl -fsSL https://raw.githubusercontent.com/sedstart/setup/main/install.sh | bash
 ```
 
 ------------------------------------------------------------------------
@@ -95,8 +95,8 @@ sedstart --help
 
   Platform        Install Location
   --------------- -------------------------------------------------
-  macOS / Linux   `/usr/local/bin/sedstart`
-  Windows         `%LOCALAPPDATA%\Programs\sedstart\sedstart.exe`
+  macOS / Linux   `~/.local/bin/sedstart`
+  Windows         `%LOCALAPPDATA%\Microsoft\WindowsApps\sedstart.exe`
 
 The installer automatically:
 
@@ -150,7 +150,12 @@ sedstart (`sedstart --help` above) keeps it in sync automatically.
 
 # 🔄 Update
 
-Re-run the installation command to update to the latest version.
+Run `sedstart update` (add `--env qa` for the QA channel; prod is the default).
+You'll also be notified when a new version is released.
+
+Installs from older versions lived in `/usr/local/bin` (macOS/Linux) or
+`%LOCALAPPDATA%\Programs\sedstart` (Windows). Re-running the installer or
+`sedstart update` moves you to the new location and removes the old copy.
 
 ------------------------------------------------------------------------
 
@@ -159,16 +164,12 @@ Re-run the installation command to update to the latest version.
 ## macOS / Linux
 
 ``` bash
-sudo rm /usr/local/bin/sedstart
+rm ~/.local/bin/sedstart
 ```
 
 ## Windows
 
-Delete the folder:
-
-    %LOCALAPPDATA%\Programs\sedstart
-
-Then remove it from your User PATH environment variable.
+Delete `%LOCALAPPDATA%\Microsoft\WindowsApps\sedstart.exe`.
 
 ------------------------------------------------------------------------
 

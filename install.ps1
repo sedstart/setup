@@ -1,5 +1,5 @@
 param(
-    [string]$BaseUrl = "http://cli.sedstart.com/latest",
+    [string]$BaseUrl = "https://cli.sedstart.com/latest",
     # Chrome Web Store ID of the published sedstart-recorder extension (used
     # for both QA and prod - see sedstart-fe's env.qa/env.prod
     # NEXT_PUBLIC_EXTENSION_ID). Override for a dev/unpacked build's own id.
@@ -10,7 +10,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 $BinaryName = "sedstart.exe"
-$InstallDir = "$env:LOCALAPPDATA\Programs\sedstart"
+# Per-user directory that is on PATH out of the box and needs no admin rights.
+# Legacy installs used %LOCALAPPDATA%\Programs\sedstart.
+$InstallDir = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
+$LegacyInstallDir = "$env:LOCALAPPDATA\Programs\sedstart"
+$ManifestDir = "$env:USERPROFILE\.sedstart"
 $HostName = "com.sedstart.cli"
 
 Write-Host "🌍 Using base URL: $BaseUrl"
@@ -36,6 +40,17 @@ New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Invoke-WebRequest -Uri $Url -OutFile "$InstallDir\$BinaryName"
 
 Unblock-File "$InstallDir\$BinaryName"
+
+# Remove an old install, but only if one exists.
+$LegacyExe = "$LegacyInstallDir\$BinaryName"
+if (Test-Path $LegacyExe) {
+    try {
+        Remove-Item -Force $LegacyExe
+        Write-Host "🧹 Removed old install at $LegacyExe"
+    } catch {
+        Write-Host "⚠️  Could not remove old install at $LegacyExe (in use?). Delete it manually - it may shadow the new version."
+    }
+}
 
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 
@@ -64,7 +79,7 @@ Write-Host "Restart terminal and run: sedstart --help"
 # macOS/Linux use) - see register-native-host.sh in sedstart-extension for
 # the equivalent single-browser, manual version of this.
 #
-# One manifest file is written (next to the installed exe) and reused for
+# One manifest file is written (under ~\.sedstart) and reused for
 # every browser found installed - the manifest content doesn't vary by
 # browser, only which registry key points at it.
 # ---------------------------------------------------------------------------
@@ -73,7 +88,8 @@ function Register-NativeMessagingHosts {
     Write-Host ""
     Write-Host "🔌 Registering Chrome Native Messaging host for installed browsers..."
 
-    $manifestPath = "$InstallDir\$HostName.json"
+    New-Item -ItemType Directory -Force -Path $ManifestDir | Out-Null
+    $manifestPath = "$ManifestDir\$HostName.json"
     $manifest = @{
         name             = $HostName
         description      = "Sedstart local runner native messaging host"
