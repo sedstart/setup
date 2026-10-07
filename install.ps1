@@ -97,7 +97,9 @@ function Register-NativeMessagingHosts {
         type             = "stdio"
         allowed_origins  = @("chrome-extension://$ExtensionId/")
     }
-    ($manifest | ConvertTo-Json) | Set-Content -Path $manifestPath -Encoding UTF8
+    # BOM-less UTF-8: Windows PowerShell 5's `Set-Content -Encoding UTF8` adds a
+    # BOM that strict JSON parsers (e.g. `sedstart update`) reject.
+    [System.IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json), (New-Object System.Text.UTF8Encoding($false)))
 
     # label, one or more candidate install paths to probe, registry vendor
     # key under HKCU\Software\<vendor>\NativeMessagingHosts\<HostName>.
